@@ -42,22 +42,24 @@ def main():
     print("Testing Member Data QA API")
     print("=" * 60)
     print()
-    
+
     try:
         test_health()
         test_stats()
-        
+
         # Test example questions
         test_ask("When is Layla planning her trip to London?")
         test_ask("How many cars does Vikram Desai have?")
         test_ask("What are Amira's favorite restaurants?")
-        
+
         print("=" * 60)
         print("Tests completed!")
         print("=" * 60)
-        
+
     except requests.exceptions.ConnectionError:
-        print("Error: Could not connect to the API. Make sure the server is running on http://localhost:8000")
+        print(
+            "Error: Could not connect to the API. Make sure the server is running on http://localhost:8000"
+        )
         sys.exit(1)
     except Exception as e:
         print(f"Error: {e}")
@@ -66,4 +68,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

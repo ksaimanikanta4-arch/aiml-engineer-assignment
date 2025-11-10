@@ -36,6 +36,27 @@ Health check endpoint. Returns LLM provider status.
 
 Get statistics about the messages (total messages, unique users, etc.).
 
+## Project Structure
+
+```
+Assessment Project/
+├── main.py                 # FastAPI application with /ask endpoint
+├── requirements.txt        # Python dependencies
+├── Dockerfile             # Container configuration
+├── docker-compose.yml     # Docker compose configuration
+├── Procfile              # Deployment configuration
+├── README.md              # Main documentation
+├── .gitignore             # Git ignore patterns
+├── tests/                 # Test files
+│   ├── test_api.py       # API integration tests
+│   └── test_models.py    # Model/API tests
+├── scripts/               # Utility scripts
+│   └── analysis.py       # Data analysis script
+└── docs/                  # Documentation
+    ├── SETUP.md          # Setup guide
+    └── TASK_EXPLANATION.md # Task explanation
+```
+
 ## Setup
 
 ### Prerequisites
@@ -185,7 +206,7 @@ The system:
 
 ### Analysis of Member Data
 
-After analyzing the dataset from the external API using the `analysis.py` script, here are the actual findings:
+After analyzing the dataset from the external API using the `scripts/analysis.py` script, here are the actual findings:
 
 #### 1. **Dataset Overview**
    - **Total messages analyzed**: 1,400 (limited by API errors; total available: 3,349)

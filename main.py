@@ -18,7 +18,7 @@ load_dotenv()
 app = FastAPI(
     title="Member Data QA Service",
     description="Answer questions about member data from messages",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # External API configuration
@@ -48,7 +48,9 @@ elif OPENAI_API_KEY:
     llm_provider = "openai"
     print("✓ OpenAI API configured")
 else:
-    print("Warning: No LLM API key found (GROQ_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY). Using simple keyword search.")
+    print(
+        "Warning: No LLM API key found (GROQ_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY). Using simple keyword search."
+    )
 
 
 class QuestionRequest(BaseModel):
@@ -92,8 +94,7 @@ async def fetch_all_messages() -> list[Message]:
             while retry_count < max_retries and not success:
                 try:
                     response = await http_client.get(
-                        f"{EXTERNAL_API_BASE_URL}/messages/",
-                        params={"skip": skip, "limit": limit}
+                        f"{EXTERNAL_API_BASE_URL}/messages/", params={"skip": skip, "limit": limit}
                     )
                     response.raise_for_status()
                     data = response.json()
@@ -116,7 +117,9 @@ async def fetch_all_messages() -> list[Message]:
                 except httpx.HTTPError as e:
                     retry_count += 1
                     if retry_count < max_retries:
-                        print(f"Retrying... Error at skip={skip} (attempt {retry_count}/{max_retries}): {e}")
+                        print(
+                            f"Retrying... Error at skip={skip} (attempt {retry_count}/{max_retries}): {e}"
+                        )
                         await asyncio.sleep(0.5 * retry_count)  # Exponential backoff
                     else:
                         print(f"Skipping batch at skip={skip} after {max_retries} attempts: {e}")
@@ -133,7 +136,9 @@ async def fetch_all_messages() -> list[Message]:
 
                 # If too many consecutive failures, stop
                 if consecutive_failures >= max_consecutive_failures:
-                    print(f"Stopping pagination after {max_consecutive_failures} consecutive failures. Fetched {len(all_messages)} messages.")
+                    print(
+                        f"Stopping pagination after {max_consecutive_failures} consecutive failures. Fetched {len(all_messages)} messages."
+                    )
                     break
 
     return all_messages
@@ -145,17 +150,19 @@ def format_messages_for_context(messages: list[Message], max_chars: int = 8000) 
     """
     context_parts = []
     char_count = 0
-    
+
     for msg in messages:
         # Format: "User: [name] (user_id: [id], timestamp: [time]): [message]"
-        formatted = f"User: {msg.user_name} (ID: {msg.user_id}, Time: {msg.timestamp}): {msg.message}\n"
-        
+        formatted = (
+            f"User: {msg.user_name} (ID: {msg.user_id}, Time: {msg.timestamp}): {msg.message}\n"
+        )
+
         if char_count + len(formatted) > max_chars:
             break
-            
+
         context_parts.append(formatted)
         char_count += len(formatted)
-    
+
     return "".join(context_parts)
 
 
@@ -189,10 +196,10 @@ Answer:"""
                 model="llama-3.3-70b-versatile",  # Fast and good quality
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
+                    {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.7,
-                max_tokens=1024
+                max_tokens=1024,
             )
             answer = response.choices[0].message.content.strip()
             return answer
@@ -226,15 +233,15 @@ Answer:"""
             # Order: try newer models first, fallback to older ones
             model_names = [
                 "claude-3-5-sonnet-20241022",
-                "claude-3-5-sonnet-20240620", 
+                "claude-3-5-sonnet-20240620",
                 "claude-3-5-sonnet",
                 "claude-3-opus-20240229",  # Fallback that typically works
                 "claude-3-sonnet-20240229",
-                "claude-3-haiku-20240307"
+                "claude-3-haiku-20240307",
             ]
             message = None
             last_error = None
-            
+
             for model_name in model_names:
                 try:
                     message = claude_client.messages.create(
@@ -242,24 +249,24 @@ Answer:"""
                         max_tokens=2048,
                         temperature=0.7,
                         system=system_prompt,
-                        messages=[
-                            {"role": "user", "content": user_prompt}
-                        ]
+                        messages=[{"role": "user", "content": user_prompt}],
                     )
                     break  # Success, exit loop
                 except Exception as e:
                     last_error = e
                     # Continue to try next model
                     continue
-            
+
             if message is None:
-                raise last_error if last_error else Exception("Failed to find a working Claude model")
-            
+                raise (
+                    last_error if last_error else Exception("Failed to find a working Claude model")
+                )
+
             answer = message.content[0].text.strip()
             return answer
         except Exception as e:
             return f"Error generating answer with Claude: {str(e)}"
-    
+
     # Fallback to OpenAI if Claude is not available
     elif openai_client:
         try:
@@ -267,16 +274,16 @@ Answer:"""
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
+                    {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.7,
-                max_tokens=500
+                max_tokens=500,
             )
             answer = response.choices[0].message.content.strip()
             return answer
         except Exception as e:
             return f"Error generating answer with OpenAI: {str(e)}"
-    
+
     else:
         return "Error: No LLM API key configured. Please set ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable."
 
@@ -288,31 +295,31 @@ def answer_question_simple(question: str, messages: list[Message]) -> str:
     """
     question_lower = question.lower()
     answers = []
-    
+
     # Extract user name from question if mentioned
     mentioned_users = []
     for msg in messages:
         if msg.user_name.lower() in question_lower:
             mentioned_users.append(msg.user_name)
-    
+
     # Filter messages by mentioned users or search all
     relevant_messages = messages
     if mentioned_users:
         relevant_messages = [msg for msg in messages if msg.user_name in mentioned_users]
-    
+
     # Simple keyword-based search
     keywords = question_lower.split()
     keyword_matches = []
-    
+
     for msg in relevant_messages[:50]:  # Limit search to recent 50 messages
         msg_lower = msg.message.lower()
         matches = sum(1 for keyword in keywords if keyword in msg_lower and len(keyword) > 3)
         if matches > 0:
             keyword_matches.append((matches, msg))
-    
+
     # Sort by match count and get top matches
     keyword_matches.sort(reverse=True, key=lambda x: x[0])
-    
+
     if keyword_matches:
         top_match = keyword_matches[0][1]
         return f"Based on the messages, I found that {top_match.user_name} mentioned: '{top_match.message}' (on {top_match.timestamp})"
@@ -324,11 +331,7 @@ def answer_question_simple(question: str, messages: list[Message]) -> str:
 async def root():
     return {
         "service": "Member Data QA Service",
-        "endpoints": {
-            "ask": "/ask?question=YOUR_QUESTION",
-            "health": "/health",
-            "stats": "/stats"
-        }
+        "endpoints": {"ask": "/ask?question=YOUR_QUESTION", "health": "/health", "stats": "/stats"},
     }
 
 
@@ -339,7 +342,7 @@ async def health():
         "llm_provider": llm_provider or "none",
         "groq_configured": groq_client is not None,
         "claude_configured": claude_client is not None,
-        "openai_configured": openai_client is not None
+        "openai_configured": openai_client is not None,
     }
 
 
@@ -353,12 +356,8 @@ async def stats():
             if msg.user_name not in users:
                 users[msg.user_name] = 0
             users[msg.user_name] += 1
-        
-        return {
-            "total_messages": len(messages),
-            "unique_users": len(users),
-            "users": users
-        }
+
+        return {"total_messages": len(messages), "unique_users": len(users), "users": users}
     except Exception as e:
         return {"error": str(e)}
 
@@ -370,22 +369,22 @@ async def ask_question(question: str = Query(..., description="The question to a
     """
     if not question or not question.strip():
         raise HTTPException(status_code=400, detail="Question parameter is required")
-    
+
     try:
         # Fetch all messages
         messages = await fetch_all_messages()
-        
+
         if not messages:
             return AnswerResponse(answer="No messages found in the data source.")
-        
+
         # Use LLM if available, otherwise fall back to simple search
         if groq_client or claude_client or openai_client:
             answer = await answer_question_with_llm(question, messages)
         else:
             answer = answer_question_simple(question, messages)
-        
+
         return AnswerResponse(answer=answer)
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing question: {str(e)}")
 
@@ -400,5 +399,5 @@ async def ask_question_post(request: QuestionRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 
+    uvicorn.run(app, host="0.0.0.0", port=8000)

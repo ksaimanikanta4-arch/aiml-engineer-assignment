@@ -76,11 +76,18 @@ Assessment Project/
 ├── main.py                 # FastAPI application with /ask endpoint
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile             # Container configuration
+├── docker-compose.yml     # Docker compose configuration
+├── Procfile              # Deployment configuration
 ├── README.md              # Documentation with design notes
-├── analysis.py            # Data analysis script
-├── test_api.py            # Test script
-├── .env.example           # Environment variables template
-└── .gitignore             # Git ignore file
+├── .gitignore             # Git ignore file
+├── tests/                 # Test files
+│   ├── test_api.py       # API integration tests
+│   └── test_models.py    # Model/API tests
+├── scripts/               # Utility scripts
+│   └── analysis.py       # Data analysis script
+└── docs/                  # Documentation
+    ├── SETUP.md          # Setup guide
+    └── TASK_EXPLANATION.md # Task explanation
 ```
 
 ### 🚀 How It Works

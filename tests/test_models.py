@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-api_key = os.getenv('ANTHROPIC_API_KEY')
+api_key = os.getenv("ANTHROPIC_API_KEY")
 if not api_key:
     print("❌ No ANTHROPIC_API_KEY found in environment")
     exit(1)
@@ -18,11 +18,11 @@ client = Anthropic(api_key=api_key)
 # List of models to try
 models_to_try = [
     "claude-3-5-sonnet-20241022",
-    "claude-3-5-sonnet-20240620", 
+    "claude-3-5-sonnet-20240620",
     "claude-3-5-sonnet",
     "claude-3-sonnet-20240229",
     "claude-3-opus-20240229",
-    "claude-3-haiku-20240307"
+    "claude-3-haiku-20240307",
 ]
 
 print("\nTesting available models...\n")
@@ -31,9 +31,7 @@ working_model = None
 for model in models_to_try:
     try:
         msg = client.messages.create(
-            model=model,
-            max_tokens=5,
-            messages=[{"role": "user", "content": "hi"}]
+            model=model, max_tokens=5, messages=[{"role": "user", "content": "hi"}]
         )
         print(f"✅ {model} - WORKS!")
         working_model = model
@@ -52,4 +50,3 @@ if working_model:
     print(f"\n✓ Recommended model: {working_model}")
 else:
     print("\n❌ No working models found. Please check your API key and account access.")
-
